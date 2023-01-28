@@ -1,8 +1,8 @@
-import { patient } from "@prisma/client";
+import { personCared } from "@prisma/client";
 import { prisma } from "../config/database.js";
 
-async function findRegistration():Promise<patient[]> {
-    return prisma.patient.findMany();
+async function findRegistration():Promise<personCared[]> {
+    return prisma.personCared.findMany();
 }
 
 const registrationRepository = {

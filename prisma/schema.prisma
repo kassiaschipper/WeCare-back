@@ -14,26 +14,37 @@ model doctors {
   address             String?
   phone               String                @db.VarChar(11)
   medicalSpecialty    medicalSpecialty      @relation(fields: [medicalSpecialtyId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  medicalappointments medicalappointments[]
+  medicalAppointments medicalAppointments[]
   prescription        prescription[]
 }
 
 model healthInsurance {
-  id           Int       @id @default(autoincrement())
+  id           Int           @id @default(autoincrement())
   name         String
   category     String?
-  phone        String?   @db.VarChar(11)
+  phone        String?       @db.VarChar(11)
   personalCode Int?
-  patient      patient[]
+  personCared  personCared[]
 }
 
 model illness {
-  id         Int       @id @default(autoincrement())
-  name       String    @unique
-  comments   String?
-  symptomsId Int?
-  symptoms   symptoms? @relation(fields: [symptomsId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  patient    patient[]
+  id          Int           @id @default(autoincrement())
+  name        String        @unique
+  comments    String?
+  symptomsId  Int?
+  symptoms    symptoms?     @relation(fields: [symptomsId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  personCared personCared[]
+}
+
+model medicalAppointments {
+  id            Int         @id(map: "medicalappointments_pkey") @default(autoincrement())
+  doctorId      Int
+  comments      String?
+  status        String      @default("Consulta Marcada")
+  date          DateTime    @default(now()) @db.Timestamptz(6)
+  personCaredId Int
+  personCared   personCared @relation(fields: [personCaredId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  doctors       doctors     @relation(fields: [doctorId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "medicalappointments_doctorId_fkey")
 }
 
 model medicalSpecialty {
@@ -59,8 +70,8 @@ model medicineBox {
   medications  medications @relation(fields: [medicationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
-model patient {
-  id                  Int                   @id @default(autoincrement())
+model personCared {
+  id                  Int                   @id(map: "patient_pkey") @default(autoincrement())
   name                String
   image               String?
   birthdayDate        DateTime              @db.Timestamp(6)
@@ -68,47 +79,43 @@ model patient {
   height              Decimal?              @db.Decimal
   healthInsuranceId   Int?
   illnessId           Int?
-  medicalappointments medicalappointments[]
-  healthInsurance     healthInsurance?      @relation(fields: [healthInsuranceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  illness             illness?              @relation(fields: [illnessId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  medicalAppointments medicalAppointments[]
+  healthInsurance     healthInsurance?      @relation(fields: [healthInsuranceId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "patient_healthInsuranceId_fkey")
+  illness             illness?              @relation(fields: [illnessId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "patient_illnessId_fkey")
   prescription        prescription[]
-  users               users[]
 }
 
 model prescription {
-  id           Int         @id @default(autoincrement())
-  doctorId     Int
-  medicationId Int
-  patientId    Int
-  doctors      doctors     @relation(fields: [doctorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  medications  medications @relation(fields: [medicationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  patient      patient     @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id            Int         @id @default(autoincrement())
+  doctorId      Int
+  medicationId  Int
+  personCaredId Int
+  doctors       doctors     @relation(fields: [doctorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  medications   medications @relation(fields: [medicationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  personCared   personCared @relation(fields: [personCaredId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model session {
+  id       Int      @id @default(autoincrement())
+  userId   Int
+  token    String
+  createAt DateTime @default(now()) @db.Timestamptz(6)
+  users    users    @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model symptoms {
   id        Int       @id @default(autoincrement())
   name      String    @unique
-  startDate DateTime  @default(dbgenerated("'2023-01-24 11:13:38.657613'::timestamp without time zone")) @db.Timestamp(6)
+  startDate DateTime  @default(dbgenerated("'2023-01-26 23:28:13.862107'::timestamp without time zone")) @db.Timestamp(6)
   endDate   DateTime? @db.Timestamp(6)
   illness   illness[]
 }
 
 model users {
-  id           Int      @id @default(autoincrement())
+  id           Int       @id @default(autoincrement())
   name         String
-  image        String?
   relationship String?
-  patientId    Int?
-  patient      patient? @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-}
-
-model medicalappointments {
-  id        Int      @id @default(autoincrement())
-  patientId Int
-  doctorId  Int
-  comments  String?
-  status    String   @default("Consulta Marcada")
-  date      DateTime @default(now()) @db.Timestamptz(6)
-  doctors   doctors  @relation(fields: [doctorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  patient   patient  @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  email        String    @unique
+  password     String
+  session      session[]
 }

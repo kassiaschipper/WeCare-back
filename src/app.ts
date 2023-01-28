@@ -3,6 +3,8 @@ import { loadEnv } from './config/envs.js';
 import { connectDb, disconnectDb } from './config/database.js';
 import cors from 'cors';
 import { registrationRouter } from './routers/registration-router.js';
+import { userRouter } from './routers/user-router.js';
+import { authenticationRouter } from './routers/authentication-router.js';
 
 loadEnv();
 
@@ -11,7 +13,9 @@ app
     .use(cors())
     .use(express.json())
     .get("/status", (_req, res) => res.send("ok"))
-    .use("/registration", registrationRouter);
+    .use("/registration", registrationRouter)
+    .use("/user", userRouter)
+    .use("/auth", authenticationRouter);
 
 export function init(): Promise<Express> {
   connectDb();
